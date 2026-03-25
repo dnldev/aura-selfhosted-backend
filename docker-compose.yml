@@ -11,7 +11,7 @@ version: "3.8"
 
 services:
   aura:
-    image: danieltech/aura-backend:latest
+    image: hoidhopper/aura-backend:latest
     container_name: aura-backend
     restart: unless-stopped
     ports:
