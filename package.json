@@ -1,0 +1,32 @@
+{
+  "name": "aura-selfhosted",
+  "version": "1.0.0",
+  "description": "Self-hosted backend for Aura reading tracker",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.0.0",
+    "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^8.0.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.0",
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/nodemailer": "^7.0.11",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.1"
+  }
+}
