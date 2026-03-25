@@ -2,13 +2,45 @@
 
 A lightweight, self-hosted backend for the Aura reading tracker app.
 
-## Quick Start
+## Quick Start with Docker Compose
+
+1. Create a `docker-compose.yml`:
+
+```yaml
+version: "3.8"
+
+services:
+  aura:
+    image: hoidhopper/aura-backend:latest
+    container_name: aura-backend
+    restart: unless-stopped
+    ports:
+      - "3400:3400"
+    volumes:
+      - aura-data:/data
+    environment:
+      - PORT=3400
+      # REQUIRED: Change this to a strong random secret before running.
+      # Generate one with: openssl rand -hex 32
+      - JWT_SECRET=${JWT_SECRET:-please-change-this-secret}
+      - AURA_DB_PATH=/data/aura.db
+
+volumes:
+  aura-data:
+    driver: local
+```
+
+2. Generate a secure JWT secret and start:
 
 ```bash
-# Using Docker Compose (recommended)
-JWT_SECRET=your-secret-here docker compose up -d
+JWT_SECRET=$(openssl rand -hex 32) docker compose up -d
+```
 
-# Or manually
+3. Point the Aura app at `http://<your-server-ip>:3400`
+
+### Manual Installation (without Docker)
+
+```bash
 npm install
 npm run build
 JWT_SECRET=your-secret-here npm start
