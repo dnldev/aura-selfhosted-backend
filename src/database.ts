@@ -1,16 +1,57 @@
-
-
 import Database from 'better-sqlite3';
+import { mkdirSync, accessSync, constants } from 'node:fs';
 import nodePath from "node:path";
-const { resolve } = nodePath;
+const { resolve, dirname } = nodePath;
 
 const DATABASE_PATH = resolve(process.env['AURA_DB_PATH'] ?? './data/aura.db');
 
 let database: Database.Database | undefined;
 
+/**
+ * Ensures the parent directory of the database file exists and is writable.
+ * This prevents "unable to open database file" errors when using Docker volumes
+ * with custom mount paths.
+ */
+function ensureDatabaseDirectory(): void {
+  const databaseDirectory = dirname(DATABASE_PATH);
+
+  try {
+    mkdirSync(databaseDirectory, { recursive: true });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[database] Failed to create database directory "${databaseDirectory}": ${message}\n` +
+      `  Ensure the path is writable. If using Docker, check your volume mount permissions.`
+    );
+    throw error;
+  }
+
+  try {
+    accessSync(databaseDirectory, constants.W_OK);
+  } catch {
+    console.error(
+      `[database] Database directory "${databaseDirectory}" is not writable.\n` +
+      `  If using Docker, ensure the volume is mounted with correct permissions.\n` +
+      `  Try: docker run --user $(id -u):$(id -g) ... or fix directory ownership.`
+    );
+    throw new Error(`Database directory "${databaseDirectory}" is not writable`);
+  }
+}
+
 export function getDatabase(): Database.Database {
   if (!database) {
-    database = new Database(DATABASE_PATH);
+    ensureDatabaseDirectory();
+    try {
+      database = new Database(DATABASE_PATH);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[database] Failed to open database at "${DATABASE_PATH}": ${message}\n` +
+        `  Check that AURA_DB_PATH points to a valid, writable file location.\n` +
+        `  Current AURA_DB_PATH: ${process.env['AURA_DB_PATH'] ?? '(not set, using default ./data/aura.db)'}`
+      );
+      throw error;
+    }
     database.pragma('journal_mode = WAL');
     database.pragma('foreign_keys = ON');
     initializeSchema(database);

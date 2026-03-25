@@ -1,27 +1,25 @@
-# node:22 Debian bookworm — glibc base required for better-sqlite3 native module.
-# Do NOT switch to node:22-alpine (musl libc) — the native .node binary will not load.
-#
-# AppArmor note: Docker inside this privileged LXC container cannot load the
-# docker-default AppArmor profile during build-time RUN steps. To work around
-# this, node_modules are installed on the LXC host (glibc — same libc as this
-# image) and copied in. This means: run `npm ci --omit=dev` in aura-selfhosted/
-# on the host before rebuilding this image.
-FROM node:22
+FROM node:22-alpine
+
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
 COPY package*.json ./
-# node_modules pre-installed on the host to avoid AppArmor/LXC docker build failures.
-# Host libc (glibc) matches this image (Debian bookworm), so native binaries are compatible.
-COPY node_modules ./node_modules
+RUN npm ci --omit=dev
 
 COPY dist/ ./dist/
+
+# Create data directory with correct permissions
+RUN mkdir -p /data && chown node:node /data
+
+USER node
 
 ENV PORT=3400
 ENV AURA_DB_PATH=/data/aura.db
 
 EXPOSE 3400
 
-VOLUME ["/data"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT}/health || exit 1
 
 CMD ["node", "dist/server.js"]

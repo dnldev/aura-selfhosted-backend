@@ -1,13 +1,11 @@
-# Aura Self-Hosted Backend — docker-compose for community users
+# Aura Self-Hosted Backend
 #
 # Usage:
-#   1. Copy this file to a new directory on your server
-#   2. Set JWT_SECRET to a random string (openssl rand -hex 32)
-#   3. Run: docker compose up -d
-#   4. Point the Aura app at http://<your-server-ip>:3400
-#
-# Full guide: https://docs.aurareads.app/self-hosting
-version: "3.8"
+#   1. Copy this file to a directory on your server
+#   2. Generate a JWT secret: openssl rand -hex 32
+#   3. Replace "please-change-this-secret" below with your generated secret
+#   4. Run: docker compose up -d
+#   5. Point the Aura app at http://<your-server-ip>:3400
 
 services:
   aura:

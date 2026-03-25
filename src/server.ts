@@ -1,17 +1,9 @@
 
-
 import express from 'express';
-import { mkdirSync } from 'node:fs';
-import nodePath from "node:path";
-const { resolve } = nodePath;
 import { authRouter, requireAuthentication } from './auth.js';
 import { booksRouter, sessionsRouter, preferencesRouter, ticketsRouter } from './routes.js';
 
 const PORT = Number.parseInt(process.env['PORT'] ?? '3400', 10);
-
-// Ensure data directory exists
-mkdirSync(resolve(process.env['AURA_DB_PATH'] ?? './data', '..'), { recursive: true });
-mkdirSync(resolve('./data'), { recursive: true });
 
 const app = express();
 app.disable('x-powered-by');
