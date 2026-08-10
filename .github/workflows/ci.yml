@@ -1,0 +1,51 @@
+# CI for aura-selfhosted-backend — the repository's first check of any kind.
+#
+# Before this file: 0 workflows registered, 0 runs, ever.
+#
+# CORRECTION TO THE SURVEY THAT PROMPTED THIS, recorded here so nobody chases the wrong bug:
+# it reported `npm test` as FAIL(rc=127) — "vitest: not found; the test script names a runner that
+# is not installed" — and ranked the repo 12th partly on that. That is an artefact of measuring in
+# a checkout with no node_modules. vitest IS a devDependency and it IS in the lockfile. Measured at
+# origin/main on CT 100 after `npm ci --ignore-scripts`: typecheck 0, test 0, build 0. Nothing here
+# is broken; it was simply never installed before being run.
+#
+# EVERY STEP IS A SCRIPT THIS REPO ALREADY DECLARES. There is no lint step because there is NO
+# LINT SCRIPT and no eslint config in this repo — inventing one here would be a gate the repo does
+# not have. Adding eslint is a worthwhile separate PR (this is a service handling self-hosted
+# deployments), but it is a code change, not a CI change.
+#
+# No coverage step either: no coverage script, no thresholds declared.
+#
+# RUNNER: ubuntu-latest. The estate box runs as ROOT and root bypasses file permissions, so any
+# test asserting something is refused cannot fail closed there. Non-root is the more correct
+# environment, not merely the cheaper one.
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  gates:
+    name: typecheck · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - name: typecheck
+        run: npm run typecheck
+      - name: test
+        run: npm test
+      # `start` runs dist/server.js and the Dockerfile builds from it — typechecking without
+      # emitting leaves the service undeployable, so the emit is its own assertion.
+      - name: build
+        run: npm run build
